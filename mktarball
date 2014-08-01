@@ -1,0 +1,17 @@
+#!/bin/sh
+
+dir=$1
+tag=$2
+projver=${dir##*/}-$tag
+
+rm -rf $projver
+(cd $dir && git archive --prefix=$projver/ $tag) | tar x
+(cd $projver && find * -type f -print) |
+  while IFS= read -r file
+  do
+    touch -t $(cd $dir && git rev-list --format=format:%ai -n1 $tag $file |
+      sed '/^commit/d;s/ [-+].*$//;s/[- :]//g;s/\(..\)$/.\1/') $projver/$file
+  done
+rm -f $projver.tar.bz2
+tar cjf $projver.tar.bz2 $projver
+rm -r $projver
