@@ -2,6 +2,7 @@
 
 dir=$1
 tag=$2
+tarsuffix=$3
 projver=${dir##*/}-$tag
 
 rm -rf $projver
@@ -12,6 +13,6 @@ rm -rf $projver
     touch -t $(cd $dir && git rev-list --format=format:%ai -n1 $tag $file |
       sed '/^commit/d;s/ [-+].*$//;s/[- :]//g;s/\(..\)$/.\1/') $projver/$file
   done
-rm -f $projver.tar.bz2
-tar cjf $projver.tar.bz2 $projver
+rm -f $projver$tarsuffix.tar.bz2
+tar cjf $projver$tarsuffix.tar.bz2 $projver
 rm -r $projver
