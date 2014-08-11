@@ -10,7 +10,7 @@ rm -rf $projver
 (cd $projver && find * -type f -print) |
   while IFS= read -r file
   do
-    touch -t $(cd $dir && git rev-list --format=format:%ai -n1 $tag $file |
+    touch -t $(cd $dir && git rev-list --format=format:%ai -n1 $tag -- $file |
       sed '/^commit/d;s/ [-+].*$//;s/[- :]//g;s/\(..\)$/.\1/') $projver/$file
   done
 rm -f $projver$tarsuffix.tar.bz2
