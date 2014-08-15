@@ -1,0 +1,15 @@
+#!/bin/sh -x
+
+dest=$1
+outer=$2
+outerprojver=${dest%%.tar*}
+inner=$3
+innertag=$4
+
+rm -rf $outerprojver
+tar xf $outer
+(cd $outerprojver && tar xf ../$inner &&
+ sed -e "/^HTSDIR/s/=.*/= htslib-$innertag/" -i.bak Makefile; rm Makefile.bak)
+rm -f $dest
+tar cjf $dest $outerprojver
+rm -r $outerprojver
