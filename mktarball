@@ -13,6 +13,11 @@ rm -rf $projver
     touch -t $(cd $dir && git rev-list --format=format:%ai -n1 $tag -- $file |
       sed '/^commit/d;s/ [-+].*$//;s/[- :]//g;s/\(..\)$/.\1/') $projver/$file
   done
+if test -f $projver/configure.ac
+then
+  (cd $projver && MAKEFLAGS= MAKELEVEL= MAKEOVERRIDES= autoconf --warnings=all)
+  rm -rf $projver/autom4te.cache
+fi
 rm -f $projver$tarsuffix.tar.bz2
 tar cjf $projver$tarsuffix.tar.bz2 $projver
 rm -r $projver
