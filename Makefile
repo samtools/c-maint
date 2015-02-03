@@ -1,13 +1,14 @@
 TAR = .tar.bz2
 TAG = none
+HTSTAG = $(TAG)
 
-tar: htslib-$(TAG)$(TAR) bcftools-$(TAG)$(TAR) samtools-$(TAG)$(TAR)
+tar: htslib-$(HTSTAG)$(TAR) bcftools-$(TAG)$(TAR) samtools-$(TAG)$(TAR)
 
-%-$(TAG)$(TAR): %-$(TAG)-solo$(TAR) htslib-$(TAG)$(TAR)
-	./addhtslib $@ $^ $(TAG)
+%-$(TAG)$(TAR): %-$(TAG)-solo$(TAR) htslib-$(HTSTAG)$(TAR)
+	./addhtslib $@ $^ $(HTSTAG)
 
-htslib-$(TAG)$(TAR):
-	./mktarball ../rel/htslib $(TAG)
+htslib-$(HTSTAG)$(TAR):
+	./mktarball ../rel/htslib $(HTSTAG)
 
 %-$(TAG)-solo$(TAR):
 	./mktarball ../rel/$* $(TAG) -solo
