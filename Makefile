@@ -8,10 +8,10 @@ tar: htslib-$(HTSTAG)$(TAR) bcftools-$(TAG)$(TAR) samtools-$(TAG)$(TAR)
 	./addhtslib $@ $^ $(HTSTAG)
 
 htslib-$(HTSTAG)$(TAR):
-	./mktarball ../rel/htslib $(HTSTAG)
+	./mktarball ../htslib $(HTSTAG)
 
 %-$(TAG)-solo$(TAR):
-	./mktarball ../rel/$* $(TAG) -solo
+	./mktarball ../$* $(TAG) -solo
 
 .PRECIOUS: %-$(TAG)-solo$(TAR)
 

@@ -15,8 +15,13 @@ rm -rf $projver
   done
 if test -f $projver/configure.ac
 then
-  (cd $projver && MAKEFLAGS= MAKELEVEL= MAKEOVERRIDES= autoconf --warnings=all)
-  rm -rf $projver/autom4te.cache
+  (cd $projver
+  touch config.mk
+  grep -q AX_ configure.ac && (grep -q m4_include configure.ac || aclocal)
+  grep -q AH_ configure.ac && autoheader
+  MAKEFLAGS= MAKELEVEL= MAKEOVERRIDES= autoconf --warnings=all
+  egrep '^[^#]*[[:<:]]A[A-Z]_[A-Z_]*' configure && exit 1
+  rm -rf autom4te.cache config.mk)
 fi
 rm -f $projver$tarsuffix.tar.bz2
 tar cjf $projver$tarsuffix.tar.bz2 $projver
