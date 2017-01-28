@@ -51,8 +51,12 @@ Finally, and somewhat at your leisure, merge the version number bumps etc back t
     git fetch
     git merge --no-ff --no-commit master
 
+There is an edit to be made to _samtools/bam.h_, and also to _*/NEWS_ if you decide to add items along the way to a subsequent release:
+
 * `HS `  Add new header to _NEWS_
 * ` S `  Add `+` to `BAM_VERSION` in _bam.h_
+
+And finally commit it to **develop**:
 
     git add NEWS bam.h
     git commit -m 'Merge version number bump and NEWS file from master'
