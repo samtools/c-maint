@@ -20,8 +20,8 @@ then
   grep -q AX_ configure.ac && (grep -q m4_include configure.ac || aclocal)
   grep -q AH_ configure.ac && autoheader
   MAKEFLAGS= MAKELEVEL= MAKEOVERRIDES= autoconf --warnings=all
-  egrep '^[^#]*[[:<:]]A[A-Z]_[A-Z_]*' configure && exit 1
   rm -rf autom4te.cache config.mk)
+  egrep '^[^#]*[[:<:]]A[A-Z]_[A-Z_]*' $projver/configure && exit 1
 fi
 rm -f $projver$tarsuffix.tar.bz2
 tar cjf $projver$tarsuffix.tar.bz2 $projver
