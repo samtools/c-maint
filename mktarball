@@ -21,7 +21,6 @@ then
   grep -q AH_ configure.ac && autoheader
   MAKEFLAGS= MAKELEVEL= MAKEOVERRIDES= autoconf --warnings=all
   rm -rf autom4te.cache config.mk)
-  egrep '^[^#]*[[:<:]]A[A-Z]_[A-Z_]*' $projver/configure && exit 1
 fi
 rm -f $projver$tarsuffix.tar.bz2
 tar cjf $projver$tarsuffix.tar.bz2 $projver
