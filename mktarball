@@ -17,10 +17,13 @@ if test -f $projver/configure.ac
 then
   (cd $projver
   touch config.mk
+  unset MAKEFLAGS MAKELEVEL MAKEOVERRIDES MFLAGS
   grep -q AX_ configure.ac && (grep -q m4_include configure.ac || aclocal)
   grep -q AH_ configure.ac && autoheader
-  MAKEFLAGS= MAKELEVEL= MAKEOVERRIDES= autoconf --warnings=all
+  autoconf --warnings=all
   rm -rf autom4te.cache config.mk)
+  # Look for unexpanded autoconf macros
+  egrep '^[^#]*\<A[A-Z]_[A-Z_]*' $projver/configure && exit 1
 fi
 rm -f $projver$tarsuffix.tar.bz2
 tar cjf $projver$tarsuffix.tar.bz2 $projver
