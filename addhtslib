@@ -9,7 +9,7 @@ innertag=$4
 rm -rf $outerprojver
 tar xf $outer
 (cd $outerprojver && tar xf ../$inner &&
- sed -e "/^HTSDIR/s/=.*/= htslib-$innertag/;s,@HTSDIR@#[^#]*#,@HTSDIR@#htslib-$innertag#,g" -i '' Makefile)
+ sed -e "/^HTSDIR/s/=.*/= htslib-$innertag/;s,@HTSDIR@#[^#]*#,@HTSDIR@#htslib-$innertag#,g" Makefile > Makefile~ && mv Makefile~ Makefile )
 rm -f $dest
 tar cjf $dest $outerprojver
 rm -r $outerprojver
