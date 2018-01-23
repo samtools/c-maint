@@ -8,6 +8,8 @@ We follow the [git-flow] conventions, where releases are tagged on the **master*
 
 ## Merge to master
 
+NB: This stage can now be automated using the `mkrelease` script.  Simply update the version number at the top, and run it.
+
 We first set up the merge commit that will eventually be tagged as the release:
 
     git checkout --track origin/master
@@ -15,7 +17,7 @@ We first set up the merge commit that will eventually be tagged as the release:
 
 but do not commit it, as version numbers etc will be bumped within the merge commit -- so that no commits prior to this one (which will eventually be the one tagged as the release) contain the bumped version number.  In particular, for `H`/`S`/`B`, i.e., for HTSlib/SAMtools/BCFtools respectively, make the following edits:
 
-* `HSB`  Update `PACKAGE_VERSION` in _Makefile_
+* `HSB`  Update `VERSION` in _version.sh_
 * `HS `  Add to _NEWS_
 * ` S `  Update version number in _README_ (on three lines)
 * ` S `  Update version number in _bam.h_ (removing any `+` in the string)
