@@ -1,6 +1,7 @@
 TAR = .tar.bz2
 TAG = none
 HTSTAG = $(TAG)
+PREFIX_DIR = ..
 
 tar: htslib-$(HTSTAG)$(TAR) bcftools-$(TAG)$(TAR) samtools-$(TAG)$(TAR)
 
@@ -8,10 +9,10 @@ tar: htslib-$(HTSTAG)$(TAR) bcftools-$(TAG)$(TAR) samtools-$(TAG)$(TAR)
 	./addhtslib $@ $^ $(HTSTAG)
 
 htslib-$(HTSTAG)$(TAR):
-	./mktarball ../htslib $(HTSTAG)
+	./mktarball $(PREFIX_DIR)/htslib $(HTSTAG)
 
 %-$(TAG)-solo$(TAR):
-	./mktarball ../$* $(TAG) -solo
+	./mktarball $(PREFIX_DIR)/$* $(TAG) -solo
 
 .PRECIOUS: %-$(TAG)-solo$(TAR)
 
