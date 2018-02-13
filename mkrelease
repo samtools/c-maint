@@ -8,8 +8,8 @@ version=1.7
 repname=samtools
 
 # directory to do the pull and build
-TMPDIR=/tmp/release
-TMPDIR=`readlink -f $TMPDIR`
+TMPDIR=~/tmp/release/$version
+TMPDIR=`readlink -m $TMPDIR`
 
 # clean up TMPDIR
 mkdir -p $TMPDIR
@@ -19,7 +19,7 @@ cd $TMPDIR
 for repo in htslib samtools bcftools; do
     echo Building $repo
     rm -fr $repo
-    git clone git@github.com:$repname/$repo.git
+    git clone http://github.com/$repname/$repo.git
 
     cd $repo
 
