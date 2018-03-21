@@ -4,6 +4,8 @@ set -e
 
 version=1.7
 
+script_dir=$(dirname "$(readlink -f "$0")")
+
 # github repository to pull from
 repname=samtools
 
@@ -27,6 +29,7 @@ for repo in htslib samtools bcftools; do
     git merge --no-ff --no-commit develop
 
     date=`date +"%d %B %Y"`
+    ndate=`echo "$date" | perl -pe '@s = qw(st nd rd); s/^([23]?)([123]) /$1$2$s[$2-1] /; s/^(\d+) /$1th /'`
     if [ -e version.sh ] ; then
 	sed -i "s/^VERSION=[1-9].*/VERSION=$version/" version.sh
 	git add version.sh
@@ -55,6 +58,10 @@ for repo in htslib samtools bcftools; do
         sed -i "s/htslib-.*/htslib-$version/" README
         git add README
     fi
+    if [ -e NEWS ]; then
+	perl -i -ple 'if ($. < 10) { if (s/elease a\.b/elease '"$version ($ndate)"'/) { $l = length; print; $_ = <>; $_ = substr($_, 0, 1) x $l; } }' NEWS
+	git add NEWS
+    fi
     if [ -e bam.h ]; then
         sed -i "s/BAM_VERSION.*/BAM_VERSION \"$version\"/" bam.h
         git add bam.h
@@ -65,6 +72,10 @@ for repo in htslib samtools bcftools; do
         make DOC_VERSION=\"$version\" DOC_DATE=`date +"%Y-%m-%d"` docs
         git add doc/bcftools.1 doc/bcftools.html
     fi
-    # git commit --no-verify -m "Release $version: summary"
+    git commit --no-verify -m "Release $version"
     cd ..
+
+    "${script_dir}/news2notes.pl" -format tag "$repo/NEWS" > "${repo}_notes_tag.txt"
+    "${script_dir}/news2notes.pl" -format sf "$repo/NEWS" > "${repo}_notes_sf.txt"
+    "${script_dir}/news2notes.pl" -format github "$repo/NEWS" > "${repo}_notes_github.txt"
 done
