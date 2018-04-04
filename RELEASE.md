@@ -1,5 +1,59 @@
 Making a release of htslib, samtools, and bcftools, or just one or two of them, has several stages: the source control gymnastics of tagging the desired source as a release; generating the release tarballs/packages; and uploading the release to GitHub and SourceForge and publicising it.
 
+# Release process summary
+
+* Update the version number in `mkrelease`
+
+* Run `mkrelease`.  This will clone repositories into `$HOME/tmp/release/<version>`, merge changes to `master` with necessary changes and commit everything.  It will also reformat the NEWS file into versions suitable for GitHub, SourceForge and the release tag.
+
+* **Check that `mkrelease` has worked correctly.**
+  - Use `gitk --all` on each repository
+  - Grep for the old version number to ensure it's been replaced everywhere
+  - Check man pages have the correct date
+  - If any errors are found, fix `mkrelease` and re-run it.
+
+* Make any minor tweaks necessary to various _notes_ files
+
+* Run `tag_release` to add the release tag and merge changes back to develop.
+
+* **Check that `tag_release` has worked correctly.**
+  - Use `gitk --all` on each repository
+
+* Run `make tar TAG=<version> PREFIX_DIR=$HOME/tmp/release/<version>`
+  - Will make tar files in this directory
+
+* **Check the tar files are correct.**
+  - Compare to previous tar files
+  - Unpack, build and test on various platforms
+
+* Make draft releases on GitHub
+  - Copy in <repos>_notes_github.txt files
+  - Upload tar files
+
+* Make staged directory on SourceForge
+  - `cat {htslib,samtools,bcftools}_notes_sf.txt > README.txt` and upload
+  - Upload tar files
+
+* Prepeare tweet and release announcement email
+
+* Do release
+  - **Check that everything is ready and correct.**
+  - For each reposiotry in `$HOME/tmp/release/<version>` run `git push origin master develop <version>`
+  - Fill in tag and publish release on GitHub repositories
+  - Unstage the SourceForge directory
+  - Select new samtools tarball for the download button.
+  - **Check the published release pages are as expected (correct text and files attached).**
+
+* Send tweet and email
+
+* Update www.htslib.org
+  - Update download buttons to point to the new release
+  - Run `make` to update the man pages
+  - Push to your own fork of www.htslib.org gh-pages and check it looks OK.
+  - When ready, push to samtools' www.htslib.org gh-pages
+
+* Push any changes made to this repository.
+
 # Tagging the release
 
 We follow the [git-flow] conventions, where releases are tagged on the **master** branch.  We also merge the release commit back to **develop**, so that `git describe` describes subsequent commits on the **develop** branch with respect to the newly-created latest release.
@@ -32,6 +86,8 @@ And finally commit it:
     git commit --no-verify -m 'Release X.Y.Z: summary'
 
 ## Tag release commit
+
+NB: This stage (and "merge back to develop") can now be done using the `tag_release` script.
 
 Tag this merge commit, using "HTSlib [patch] release X.Y.Z: summary" etc as the subject line and the release notes copied from _NEWS_ as the body of the tag message.  You want to use an annotated (`-a`) or ideally signed (`-s`) tag:
 
