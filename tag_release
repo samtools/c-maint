@@ -1,0 +1,44 @@
+#!/bin/sh -x
+
+set -e
+
+script_dir=$(dirname "$(readlink -f "$0")")
+
+version=`awk '/^version=[0-9]\.[0-9](\.[0-9])?$/ { gsub(/^version=/, ""); print; }' "$script_dir/mkrelease"`
+if [ "x$version" = "x" ]; then
+    echo "Couldn't get version from $script_dir/mkrelease"
+    exit 1
+fi
+
+# directory to do the pull and build
+TMPDIR=~/tmp/release/$version
+TMPDIR=`readlink -m $TMPDIR`
+
+for repo in htslib samtools bcftools; do
+    cd "$TMPDIR/$repo"
+    git tag -F ../${repo}_notes_tag.txt --cleanup=verbatim -s ${version}
+    git checkout develop
+    git fetch
+    git merge --no-ff --no-commit master
+    mv NEWS NEWS~
+    case $repo in
+        (htslib)
+	    echo 'Noteworthy changes in release a.b' > NEWS
+	    echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> NEWS
+	    ;;
+	(samtools)
+	    echo 'Release a.b' > NEWS
+	    echo '-----------' >> NEWS
+	    sed -i '/define BAM_VERSION/ s/"$/+"/' bam.h
+	    git add bam.h
+	    ;;
+	(bcftools)
+	    echo "## Release a.b" > NEWS
+	    ;;
+    esac
+    echo >> NEWS
+    cat NEWS~ >> NEWS
+    rm NEWS~
+    git add NEWS
+    git commit -m 'Merge version number bump and NEWS file from master'
+done
