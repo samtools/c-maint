@@ -2,7 +2,7 @@
 
 set -e
 
-version=1.8
+version=1.9
 
 script_dir=$(dirname "$(readlink -f "$0")")
 
@@ -33,7 +33,8 @@ for repo in htslib samtools bcftools; do
     if [ -e version.sh ] ; then
 	sed -i "s/^VERSION=[1-9].*/VERSION=$version/" version.sh
 	git add version.sh
-    else
+    fi
+    if grep -q -E "PACKAGE_VERSION *= *[1-9]+\.[1-9]+" Makefile ; then
 	sed -i "s/PACKAGE_VERSION[ ][ ]*=[ ][ ]*[1-9].*/PACKAGE_VERSION = $version/" Makefile
 	git add Makefile
     fi
@@ -58,13 +59,14 @@ for repo in htslib samtools bcftools; do
         git add misc/wgsim.1
     fi
     if [ -e README ]; then
-        sed -i "s/samtools-.*/samtools-$version # Within the unpacked release directory/" README
-        sed -i "s/htslib-.*/htslib-$version/" README
+        sed -i "s/samtools-[0-9].*/samtools-$version # Within the unpacked release directory/" README
+        sed -i "s/htslib-[0-9].*/htslib-$version/" README
         git add README
     fi
     if [ -e NEWS ]; then
-	if [ "x`head -n 10 NEWS | grep -i \"release $version \"`" != x ] ; then
-	    perl -i -nle 'if ($. < 10 && /release a\.b/i) { $skip = 1; } elsif ($skip && /release \d/i) { $skip = 0; } print unless ($skip);' NEWS
+	qvers=`echo "$version" | sed 's/\./\\./'`
+	if grep -q -E -i "release $qvers( |$)" NEWS ; then
+	    perl -i -nle 'if ($. < 10 && /release a\.b/i) { $skip = 1; } elsif ($skip && /release \d/i) { $skip = 0; } if (!$skip && /release '"$qvers"'$/i) { $_ .= " ('"$ndate"')" } print unless ($skip);' NEWS
 	else
 	    perl -i -ple 'if ($. < 10) { if (s/elease a\.b/elease '"$version ($ndate)"'/) { $l = length; print; $_ = <>; if (/^([-~=])/) { $_ = $1 x $l; } } }' NEWS
 	fi

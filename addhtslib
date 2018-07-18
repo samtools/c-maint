@@ -11,5 +11,5 @@ tar xf $outer
 (cd $outerprojver && tar xf ../$inner &&
  sed -e "/^HTSDIR/s/=.*/= htslib-$innertag/;s,@HTSDIR@#[^#]*#,@HTSDIR@#htslib-$innertag#,g" Makefile > Makefile~ && mv Makefile~ Makefile )
 rm -f $dest
-tar cjf $dest $outerprojver
+tar --mode=ug=rwX --mode=o=rX --owner=0 --group=0 -cjf $dest $outerprojver
 rm -r $outerprojver

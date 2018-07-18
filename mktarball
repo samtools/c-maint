@@ -26,5 +26,5 @@ then
   egrep '^[^#]*\<A[A-Z]_[A-Z_]*' $projver/configure && exit 1
 fi
 rm -f $projver$tarsuffix.tar.bz2
-tar cjf $projver$tarsuffix.tar.bz2 $projver
+tar --mode=ug=rwX --mode=o=rX --owner=0 --group=0 -cjf $projver$tarsuffix.tar.bz2 $projver
 rm -r $projver
