@@ -25,6 +25,8 @@ for repo in htslib samtools bcftools; do
         (htslib)
 	    echo 'Noteworthy changes in release a.b' > NEWS
 	    echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> NEWS
+	    sed -i "/define *HTS_VERSION/s/[0-9][0-9]$/90/" htslib/hts.h
+	    git add htslib/hts.h
 	    ;;
 	(samtools)
 	    echo 'Release a.b' > NEWS

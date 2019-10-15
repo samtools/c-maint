@@ -4,6 +4,8 @@ set -e
 
 version=1.9
 
+vernum=$(set +x; printf "%d%03d%02d" $(echo $version | tr . ' '))
+
 script_dir=$(dirname "$(readlink -f "$0")")
 
 # github repository to pull from
@@ -37,6 +39,10 @@ for repo in htslib samtools bcftools; do
     if grep -q -E "PACKAGE_VERSION *= *[1-9]+\.[1-9]+" Makefile ; then
 	sed -i "s/PACKAGE_VERSION[ ][ ]*=[ ][ ]*[1-9].*/PACKAGE_VERSION = $version/" Makefile
 	git add Makefile
+    fi
+    if [ -e htslib/hts.h ] && grep -q "define *HTS_VERSION" Makefile ; then
+	sed -i "/define *HTS_VERSION/s/VERSION .*/VERSION $vernum/" htslib/hts.h
+	git add htslib/hts.h
     fi
     if [ -e htsfile.1 ]; then
         sed -i "s/^.TH.*/.TH htsfile 1 \"$date\" \"htslib-$version\" \"Bioinformatics tools\"/" htsfile.1
