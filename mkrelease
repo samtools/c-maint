@@ -2,7 +2,7 @@
 
 set -e
 
-version=1.9
+version=1.10
 
 vernum=$(set +x; printf "%d%03d%02d" $(echo $version | tr . ' '))
 
@@ -44,25 +44,21 @@ for repo in htslib samtools bcftools; do
 	sed -i "/define *HTS_VERSION/s/VERSION .*/VERSION $vernum/" htslib/hts.h
 	git add htslib/hts.h
     fi
-    if [ -e htsfile.1 ]; then
-        sed -i "s/^.TH.*/.TH htsfile 1 \"$date\" \"htslib-$version\" \"Bioinformatics tools\"/" htsfile.1
-        git add htsfile.1
-    fi
-    if [ -e tabix.1 ]; then
-        sed -i "s/^.TH.*/.TH tabix 1 \"$date\" \"htslib-$version\" \"Bioinformatics tools\"/" tabix.1
-        git add tabix.1
-    fi
-    if [ -e bgzip.1 ]; then
-        sed -i "s/^.TH.*/.TH bgzip 1 \"$date\" \"htslib-$version\" \"Bioinformatics tools\"/" bgzip.1
-        git add bgzip.1
-    fi
-    if [ -e samtools.1 ]; then
-        sed -i "s/^.TH.*/.TH samtools 1 \"$date\" \"samtools-$version\" \"Bioinformatics tools\"/" samtools.1
-        git add samtools.1
-    fi
-    if [ -e misc/wgsim.1 ]; then
-        sed -i "s/^.TH.*/.TH wgsim 1 \"$date\" \"samtools-$version\" \"Bioinformatics tools\"/" misc/wgsim.1
-        git add misc/wgsim.1
+    case $repo in
+	htslib) manpages="bgzip.1 htsfile.1 htslib-s3-plugin.7 tabix.1" ;;
+	samtools) manpages=doc/samtools*.1" misc/wgsim.1" ;;
+	*) manpages=none
+    esac
+    if [ "$manpages" != none ] ; then
+	for mp in $manpages ; do
+	    mp_file=${mp##*/}
+	    name=${mp_file%.[0-9]}
+	    section=${mp_file##*.}
+	    if [ -e "$mp" ] ; then
+		sed -i "s/^.TH.*/.TH $name $section \"$date\" \"$repo-$version\" \"Bioinformatics tools\"/" "$mp"
+		git add "$mp"
+	    fi
+	done
     fi
     if [ -e README ]; then
         sed -i "s/samtools-[0-9].*/samtools-$version # Within the unpacked release directory/" README

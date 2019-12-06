@@ -4,7 +4,7 @@ set -e
 
 script_dir=$(dirname "$(readlink -f "$0")")
 
-version=`awk '/^version=[0-9]\.[0-9](\.[0-9])?$/ { gsub(/^version=/, ""); print; }' "$script_dir/mkrelease"`
+version=`awk '/^version=[0-9]\.[0-9][0-9]?(\.[0-9])?$/ { gsub(/^version=/, ""); print; }' "$script_dir/mkrelease"`
 if [ "x$version" = "x" ]; then
     echo "Couldn't get version from $script_dir/mkrelease"
     exit 1
