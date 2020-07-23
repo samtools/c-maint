@@ -1,0 +1,201 @@
+#!/usr/bin/env perl
+#
+# update_copyright - add missing years to the Genome Research Ltd copyright
+#    notice.  This script only updates from the last written
+#    date it can find so as not to rewrite history.
+#
+#    Prints out a list of files where the appropriate copyright
+#    notice is not found.
+#
+#    Author: Andrew Whitwham <aw7@sanger.ac.uk>
+#
+#    Copyright (C) 2019-2020 Genome Research Ltd.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+#
+#
+#    Usage: run in git repository.  Prints out a list of problem files
+#           it cannot handle.
+
+use strict;
+use warnings;
+
+use File::Copy;
+
+my $cmd = 'git ls-tree --full-tree -r --name-only HEAD';
+
+open my $gh, '-|', $cmd or die "Cannot run \"$cmd\"\n";
+
+while ((my $filename = <$gh>)) {
+    chomp $filename;
+    
+    # file names to ignore
+    if ($filename =~ /\.(s|b|cr)am|\.out|\.expected|\.yml|\.reg|\.m4|\.vcf|\.f(a|q)|\.bed|\.gz|\.gff|\.csi|^\./) {
+        next;
+    }
+
+    my $log = "git log --stat -w $filename";
+
+    open my $sh, '-|', $log or die "Cannot run \"$log\"\n";
+
+    my %year;
+    my $date;
+    my $ignore = 0;
+
+    # These are commits in samtools we choose not to use for copyright updates.
+    my $exluded = '4363c1f8|59e644fc|62c34584|70062453|74a3e0a7|904f1f56|d779e259|fcb8af08';
+
+    while ((my $statline = <$sh>)) {
+        if ($statline =~ /^commit\s+($exluded)/) {
+            $ignore = 1;
+        }
+
+        if ($statline =~ /^Date:/) {
+            if ($statline =~ /\w{3}\s\w{3}\s\d+\s\d{2}:\d{2}:\d{2}\s(\d{4})\s/) {
+                $date = $1;
+            }
+        }
+
+        if ($date) {
+            if ($statline =~ /^\s+$filename\s+\|\s+(\d+)/) {
+                if (!$ignore) {
+                    $year{$date} += $1;
+                } else {
+                    $ignore = 0;
+                }
+            }
+        }
+    }
+
+    my @active;
+
+    for my $y (sort keys %year) {
+        if ($year{$y} > 10) {
+            push @active, $y;
+        }
+    }
+
+    close $sh;
+
+    if (scalar @active) {
+        my $workname = "$filename.working";
+        my $changed  = 0;
+
+        open my $inf, '<', $filename or die "Cannot open $filename\n";
+        open my $out, '>', $workname or die "Cannot open $workname\n";
+
+        while ((my $inline = <$inf>)) {
+            if ($inline =~ /Copyright \((c|C)\)[\s0-9\-,]*Genome\s+Research (Ltd|Limited)/) {
+                if ($inline =~ /\A.*(\d{4})/s) {
+                    my $last = $1;
+
+                    my $mod_dates = make_dates($last, @active);
+
+                    $inline =~ s/$last/$mod_dates/;
+
+                    # This is fairly horrible but it does work
+                    if ($inline =~ /(\d{4})-\d{4}-(\d{4})/) {
+                        my $beg = $1;
+                        my $end = $2;
+
+                        $inline =~ s/\d{4}-\d{4}-\d{4}/${beg}-$end/;
+                    }
+
+                    $changed = 1;
+                }
+            }
+
+            print $out $inline;
+        }
+
+        close $inf;
+        close $out;
+
+        if ($changed) {
+            my $result = copy($workname, $filename);
+
+            if (!$result) {
+                print "Error copying $workname to $filename.\n";
+            } else {
+                unlink $workname;
+            }
+        } else {
+            unlink $workname;
+            print "$filename\n";
+        }
+
+    }
+}
+
+close $gh;
+
+# Layout the years, either with a dash for contiguous years
+# e.g. 2011-2013 or comma separated otherwise e.g. 2011, 2013, 2015.
+
+sub make_dates {
+    my ($in_date, @act) = @_;
+
+    my $ad = 0;
+    my $out_str;
+    my $fst;
+    my $lst;
+
+    $fst = $lst = $in_date;
+
+    for my $y (@act) {
+        if (!$fst) {
+            $fst = $y;
+            $lst  = $y;
+            next;
+        } elsif ($y <= $fst) {
+            next;
+        }
+
+        if ($y - $lst > 1) {
+            if ($ad) {
+                $out_str .= ", ";
+            }
+
+            if ($fst == $lst) {
+                $out_str .= $fst;
+            } else {
+                $out_str .= "${fst}-${lst}";
+            }
+
+            $fst = $y;
+            $lst  = $y;
+            $ad = 1;
+        } else {
+            $lst = $y;
+        }
+    }
+
+    if ($ad) {
+        $out_str .= ", ";
+    }
+
+    if ($fst == $lst) {
+        $out_str .= "$fst";
+    } else {
+        $out_str .= "${fst}-${lst}";
+    }
+
+    return $out_str;
+}
