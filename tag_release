@@ -16,6 +16,7 @@ TMPDIR=`readlink -m $TMPDIR`
 
 for repo in htslib samtools bcftools; do
     cd "$TMPDIR/$repo"
+    git checkout master
     git tag -F ../${repo}_notes_tag.txt --cleanup=verbatim -s ${version}
     git checkout develop
     git fetch
