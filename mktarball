@@ -1,18 +1,64 @@
 #!/bin/sh
 
+
+set_timestamps () {
+  local dir="$1"
+  local tag="$2"
+  local projver="$3"
+
+  (cd $projver && find * -type f -print) |
+    while IFS= read -r file
+    do
+      touch -t $(cd $dir && git rev-list --format=format:%ai -n1 $tag -- $file |
+        sed '/^commit/d;s/ [-+].*$//;s/[- :]//g;s/\(..\)$/.\1/') $projver/$file
+    done	
+}
+
 dir=$1
 tag=$2
 tarsuffix=$3
 projver=${dir##*/}-$tag
+htscodecs_version=""
+
+case $dir in
+  */htslib)
+    if [ -e "$dir/.git/modules/htscodecs" ] ; then
+      cat > "$dir/.git/modules/htscodecs/info/attributes" <<'EOF'
+/.*            export-ignore
+/javascript    export-ignore
+/m4            export-ignore
+/README.md     export-ignore
+*Makefile.am   export-ignore
+configure*     export-ignore
+EOF
+      description=$(cd $dir/htscodecs && git describe --match 'v[0-9].[0-9]*' --dirty --always)
+      htscodecs_version=${description##v}
+    fi
+    ;;
+esac
 
 rm -rf $projver
-(cd $dir && git archive --prefix=$projver/ $tag) | tar x
-(cd $projver && find * -type f -print) |
-  while IFS= read -r file
+(cd $dir && git archive --prefix=$projver/ $tag) | tar -x
+set_timestamps $dir $tag $projver
+
+(cd $dir && git ls-tree $tag) |
+  while read -r mode objtype hash item
   do
-    touch -t $(cd $dir && git rev-list --format=format:%ai -n1 $tag -- $file |
-      sed '/^commit/d;s/ [-+].*$//;s/[- :]//g;s/\(..\)$/.\1/') $projver/$file
+    if test "$objtype" = "commit" ; then
+      (cd "$dir/$item" && git archive --prefix="$projver/$item/" "$hash" ) |
+        tar -x
+      set_timestamps "$dir/$item" "$hash" "$projver/$item"
+    fi 
   done
+
+case $dir in
+  */htslib)
+    if [ "x$htscodecs_version" != "x" -a -e "$projver/htscodecs/htscodecs" ] ; then
+      echo '#define HTSCODECS_VERSION_TEXT "'"$htscodecs_version"'"' > "$projver/htscodecs/htscodecs/version.h"
+    fi
+    ;;
+esac
+
 if test -f $projver/configure.ac
 then
   (cd $projver

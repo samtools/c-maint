@@ -2,7 +2,7 @@
 
 set -e
 
-version=1.11
+version=1.12
 
 vernum=$(set +x; printf "%d%03d%02d" $(echo $version | tr . ' '))
 
@@ -23,7 +23,7 @@ cd $TMPDIR
 for repo in htslib samtools bcftools; do
     echo Building $repo
     rm -fr $repo
-    git clone http://github.com/$repname/$repo.git
+    git clone --recurse-submodules http://github.com/$repname/$repo.git
 
     cd $repo
 
