@@ -40,6 +40,11 @@ for repo in htslib samtools bcftools; do
 	sed -i "s/PACKAGE_VERSION[ ][ ]*=[ ][ ]*[1-9].*/PACKAGE_VERSION = $version/" Makefile
 	git add Makefile
     fi
+    if grep -q -E "MACH_O_(COMPATIBILITY|CURRENT)_VERSION *= *[1-9]+\.[1-9]+" Makefile ; then
+	version_part=$(set +x; printf "%d.%d%.0s" $(echo $version | tr . ' '))
+        sed -E -i "s/MACH_O_(COMPATIBILITY|CURRENT)_VERSION[ ]+=[ ]+3\.[1-9].*/MACH_O_\1_VERSION = 3.$version_part/" Makefile
+	git add Makefile
+    fi
     if [ -e htslib/hts.h ] && grep -q "define *HTS_VERSION" Makefile ; then
 	sed -i "/define *HTS_VERSION/s/VERSION .*/VERSION $vernum/" htslib/hts.h
 	git add htslib/hts.h
