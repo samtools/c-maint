@@ -9,7 +9,7 @@
 #
 #    Author: Andrew Whitwham <aw7@sanger.ac.uk>
 #
-#    Copyright (C) 2019-2020 Genome Research Ltd.
+#    Copyright (C) 2019-2021 Genome Research Ltd.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ open my $gh, '-|', $cmd or die "Cannot run \"$cmd\"\n";
 
 while ((my $filename = <$gh>)) {
     chomp $filename;
-    
+
     # file names to ignore
     if ($filename =~ /\.(s|b|cr)am|\.out|\.expected|\.yml|\.reg|\.m4|\.vcf|\.f(a|q)|\.bed|\.gz|\.gff|\.csi|^\./) {
         next;
@@ -64,6 +64,11 @@ while ((my $filename = <$gh>)) {
 
     while ((my $statline = <$sh>)) {
         if ($statline =~ /^commit\s+($exluded)/) {
+            $ignore = 1;
+        }
+
+        if ($statline =~ /^Author:\s+John Marshall/) {
+            # does a lot of work, but not GRL copyright
             $ignore = 1;
         }
 
@@ -102,7 +107,7 @@ while ((my $filename = <$gh>)) {
         open my $out, '>', $workname or die "Cannot open $workname\n";
 
         while ((my $inline = <$inf>)) {
-            if ($inline =~ /Copyright \((c|C)\)[\s0-9\-,]*Genome\s+Research (Ltd|Limited)/) {
+            if ($inline =~ /(C|c)opyright \((c|C)\)[\s0-9\-,]*Genome\s+Research (Ltd|Limited)/) {
                 if ($inline =~ /\A.*(\d{4})/s) {
                     my $last = $1;
 
