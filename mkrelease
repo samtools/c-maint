@@ -2,7 +2,7 @@
 
 set -e
 
-version=1.14
+version=1.15
 
 vernum=$(set +x; printf "%d%03d%02d" $(echo $version | tr . ' '))
 
