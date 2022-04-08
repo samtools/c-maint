@@ -11,6 +11,9 @@ script_dir=$(dirname "$(readlink -f "$0")")
 # github repository to pull from
 repname=samtools
 
+# Early check for asciidoctor, needed for bcftools
+type asciidoctor > /dev/null || ( echo "Please add asciidoctor to your PATH" ; exit 1 )
+
 # directory to do the pull and build
 TMPDIR=~/tmp/release/$version
 TMPDIR=`readlink -m $TMPDIR`
