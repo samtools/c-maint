@@ -2,7 +2,7 @@
 
 set -e
 
-version=1.15
+version=1.15.1
 
 vernum=$(set +x; printf "%d%03d%02d" $(echo $version | tr . ' '))
 
@@ -10,6 +10,13 @@ script_dir=$(dirname "$(readlink -f "$0")")
 
 # github repository to pull from
 repname=samtools
+
+# source branch for the release
+#branch=develop
+branch=fixes-1.15
+
+# packages to include in this release
+packages="htslib samtools bcftools"
 
 # Early check for asciidoctor, needed for bcftools
 type asciidoctor > /dev/null || ( echo "Please add asciidoctor to your PATH" ; exit 1 )
@@ -23,15 +30,20 @@ mkdir -p $TMPDIR
 cd $TMPDIR
 
 # build each repository in turn
-for repo in htslib samtools bcftools; do
+for repo in $packages; do
     echo Building $repo
     rm -fr $repo
     git clone --recurse-submodules http://github.com/$repname/$repo.git
 
     cd $repo
 
-    git checkout --track origin/master
-    git merge --no-ff --no-commit develop
+    git checkout --recurse-submodules --track origin/master
+    git fetch --recurse-submodules origin "$branch":"$branch"
+    git merge --no-ff --no-commit "$branch"
+
+    if [ -e .gitmodules ] ; then
+	git submodule update
+    fi
 
     date=`date +"%-d %B %Y"`
     ndate=`echo "$date" | perl -pe '@s = qw(st nd rd); s/^([23]?)([123]) /$1$2$s[$2-1] /; s/^(\d+) /$1th /'`

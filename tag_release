@@ -20,7 +20,7 @@ for repo in htslib samtools bcftools; do
     git tag -F ../${repo}_notes_tag.txt --cleanup=verbatim -s ${version}
     git checkout develop
     git fetch
-    git merge --no-ff --no-commit master
+    git merge --no-ff --no-commit master || git mergetool
     mv NEWS NEWS~
     case $repo in
         (htslib)
