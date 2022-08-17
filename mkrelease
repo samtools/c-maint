@@ -2,7 +2,7 @@
 
 set -e
 
-version=1.15.1
+version=1.16
 
 vernum=$(set +x; printf "%d%03d%02d" $(echo $version | tr . ' '))
 
@@ -12,8 +12,7 @@ script_dir=$(dirname "$(readlink -f "$0")")
 repname=samtools
 
 # source branch for the release
-#branch=develop
-branch=fixes-1.15
+branch=develop
 
 # packages to include in this release
 packages="htslib samtools bcftools"

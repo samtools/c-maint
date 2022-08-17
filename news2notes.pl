@@ -13,15 +13,22 @@ sub usage {
 sub markdownify {
     my ($text) = @_;
     my $out = '';
+    my $last = '';
     my $newpara = 1;
 
     return '' unless ($text);
     foreach $_ (split /\n/, $text) {
 	if (/^\s*[*-]\s/) { $newpara = 1; }
 	if (/^$/) { $newpara = 1; }
+	if (/^(-+)$/ && length($1) == length($last)) {
+	    # Underline
+	    $out .= "\n";
+	    $newpara = 1;
+	}
 	if ($newpara && $out) { $out .= "\n"; }
 	if (!$newpara) { s/^\s+/ /; }
 	$out .= $_;
+	$last = $_;
 	$newpara = 0;
     }
     $out .= "\n";
@@ -76,6 +83,14 @@ sub wrap_text {
 	my $newpara = 0;
 	if (/^\s*[*-]\s/) { $newpara = 1; }
 	if (/^\s*$/) { $newpara = 1; }
+	if (/^(-+)$/ && length($1) == length($para)) {
+	    # Underline
+	    if (length($para) < $width) {
+		$para = "$para\n$1";
+		$_ = '';
+	    }
+	    $newpara = 1;
+	}
 	if ($newpara && $para) {
 	    my $indent = '';
 	    if ($para =~ /^(\s*[*-]\s)/) { $indent = ' ' x length($1); }
