@@ -1,22 +1,40 @@
+include release_settings
 TAR = .tar.bz2
-TAG = none
-HTSTAG = $(TAG)
+TAG = $(version)
+HTSTAG = $(if $(htslib_version),$(htslib_version),$(TAG))
+SAMTAG = $(if $(samtools_version),$(samtools_version),$(TAG))
+BCFTAG = $(if $(bcftools_version),$(bcftools_version),$(TAG))
 PREFIX_DIR = ..
 
-tar: htslib-$(HTSTAG)$(TAR) bcftools-$(TAG)$(TAR) samtools-$(TAG)$(TAR)
+# Hack to get rid of the quote marks in the $(packages) variable.
+PACKAGES_ := $(shell echo $(packages))
 
-%-$(TAG)$(TAR): %-$(TAG)-solo$(TAR) htslib-$(HTSTAG)$(TAR)
+tar: $(PACKAGES_)
+
+htslib: htslib-$(HTSTAG)$(TAR)
+
+samtools: samtools-$(SAMTAG)$(TAR)
+
+bcftools: bcftools-$(BCFTAG)$(TAR)
+
+samtools-$(SAMTAG)$(TAR): samtools-$(SAMTAG)-solo$(TAR) htslib-$(HTSTAG)$(TAR)
+	./addhtslib $@ $^ $(HTSTAG)
+
+bcftools-$(BCFTAG)$(TAR): bcftools-$(BCFTAG)-solo$(TAR) htslib-$(HTSTAG)$(TAR)
 	./addhtslib $@ $^ $(HTSTAG)
 
 htslib-$(HTSTAG)$(TAR):
 	./mktarball $(PREFIX_DIR)/htslib $(HTSTAG)
 
-%-$(TAG)-solo$(TAR):
-	./mktarball $(PREFIX_DIR)/$* $(TAG) -solo
+samtools-$(SAMTAG)-solo$(TAR):
+	./mktarball $(PREFIX_DIR)/samtools $(SAMTAG) -solo
 
-.PRECIOUS: %-$(TAG)-solo$(TAR)
+bcftools-$(BCFTAG)-solo$(TAR):
+	./mktarball $(PREFIX_DIR)/bcftools $(BCFTAG) -solo
+
+.PRECIOUS: samtools-$(SAMTAG)-solo$(TAR) bcftools-$(BCFTAG)-solo$(TAR)
 
 clean:
 	-rm -f *.tar.bz2
 
-.PHONY: clean tar
+.PHONY: clean tar samtools bcftools htslib

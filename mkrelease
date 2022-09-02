@@ -2,20 +2,10 @@
 
 set -e
 
-version=1.16
-
-vernum=$(set +x; printf "%d%03d%02d" $(echo $version | tr . ' '))
-
 script_dir=$(dirname "$(readlink -f "$0")")
 
-# github repository to pull from
-repname=samtools
-
-# source branch for the release
-branch=develop
-
-# packages to include in this release
-packages="htslib samtools bcftools"
+# Get settings
+. "$script_dir/release_settings"
 
 # Early check for asciidoctor, needed for bcftools
 type asciidoctor > /dev/null || ( echo "Please add asciidoctor to your PATH" ; exit 1 )
@@ -28,34 +18,48 @@ TMPDIR=`readlink -m $TMPDIR`
 mkdir -p $TMPDIR
 cd $TMPDIR
 
+# Ensure we have htslib, even if it's not to be released.
+if echo "$packages" | grep -v -q htslib ; then
+    rm -fr htslib
+    git clone --recurse-submodules http://github.com/$repname/htslib.git
+    cd htslib
+    git checkout --recurse-submodules --track origin/master
+    cd ..
+fi
+
 # build each repository in turn
 for repo in $packages; do
     echo Building $repo
+
+    eval 'repo_branch=${'"${repo}_branch"':-$branch}'
+    eval 'repo_version=${'"${repo}_version"':-$version}'
+
     rm -fr $repo
     git clone --recurse-submodules http://github.com/$repname/$repo.git
 
     cd $repo
 
     git checkout --recurse-submodules --track origin/master
-    git fetch --recurse-submodules origin "$branch":"$branch"
-    git merge --no-ff --no-commit "$branch"
+    git fetch --recurse-submodules origin "$repo_branch":"$repo_branch"
+    git merge --no-ff --no-commit "$repo_branch"
 
     if [ -e .gitmodules ] ; then
 	git submodule update
     fi
 
+    vernum=$(set +x; printf "%d%03d%02d" $(echo $repo_version | tr . ' '))
     date=`date +"%-d %B %Y"`
     ndate=`echo "$date" | perl -pe '@s = qw(st nd rd); s/^([23]?)([123]) /$1$2$s[$2-1] /; s/^(\d+) /$1th /'`
     if [ -e version.sh ] ; then
-	sed -i "s/^VERSION=[1-9].*/VERSION=$version/" version.sh
+	sed -i "s/^VERSION=[1-9].*/VERSION=$repo_version/" version.sh
 	git add version.sh
     fi
     if grep -q -E "PACKAGE_VERSION *= *[1-9]+\.[1-9]+" Makefile ; then
-	sed -i "s/PACKAGE_VERSION[ ][ ]*=[ ][ ]*[1-9].*/PACKAGE_VERSION = $version/" Makefile
+	sed -i "s/PACKAGE_VERSION[ ][ ]*=[ ][ ]*[1-9].*/PACKAGE_VERSION = $repo_version/" Makefile
 	git add Makefile
     fi
     if grep -q -E "MACH_O_(COMPATIBILITY|CURRENT)_VERSION *= *[1-9]+\.[1-9]+" Makefile ; then
-	version_part=$(set +x; printf "%d.%d%.0s" $(echo $version | tr . ' '))
+	version_part=$(set +x; printf "%d.%d%.0s" $(echo $repo_version | tr . ' '))
         sed -E -i "s/MACH_O_(COMPATIBILITY|CURRENT)_VERSION[ ]+=[ ]+3\.[1-9].*/MACH_O_\1_VERSION = 3.$version_part/" Makefile
 	git add Makefile
     fi
@@ -74,36 +78,37 @@ for repo in $packages; do
 	    name=${mp_file%.[0-9]}
 	    section=${mp_file##*.}
 	    if [ -e "$mp" ] ; then
-		sed -i "s/^.TH.*/.TH $name $section \"$date\" \"$repo-$version\" \"Bioinformatics tools\"/" "$mp"
+		sed -i "s/^.TH.*/.TH $name $section \"$date\" \"$repo-$repo_version\" \"Bioinformatics tools\"/" "$mp"
 		git add "$mp"
 	    fi
 	done
     fi
     if [ -e README ]; then
-        sed -i "s/samtools-[0-9].*/samtools-$version # Within the unpacked release directory/" README
-        sed -i "s/htslib-[0-9].*/htslib-$version/" README
+        sed -i "s/samtools-[0-9].*/samtools-$repo_version # Within the unpacked release directory/" README
+        sed -i "s/htslib-[0-9].*/htslib-${htslib_version:-$version}/" README
         git add README
     fi
     if [ -e NEWS ]; then
-	qvers=`echo "$version" | sed 's/\./\\./'`
+	qvers=`echo "$repo_version" | sed 's/\./\\./'`
 	if grep -q -E -i "release $qvers( |$)" NEWS ; then
 	    perl -i -nle 'if ($. < 10 && /release a\.b/i) { $skip = 1; } elsif ($skip && /release \d/i) { $skip = 0; } if (!$skip && /release '"$qvers"'$/i) { $_ .= " ('"$ndate"')" } print unless ($skip);' NEWS
 	else
-	    perl -i -ple 'if ($. < 10) { if (s/elease a\.b/elease '"$version ($ndate)"'/) { $l = length; print; $_ = <>; if (/^([-~=])/) { $_ = $1 x $l; } } }' NEWS
+	    perl -i -ple 'if ($. < 10) { if (s/elease a\.b/elease '"$repo_version ($ndate)"'/) { $l = length; print; $_ = <>; if (/^([-~=])/) { $_ = $1 x $l; } } }' NEWS
 	fi
 	git add NEWS
     fi
     if [ -e bam.h ]; then
-        sed -i "s/BAM_VERSION.*/BAM_VERSION \"$version\"/" bam.h
+        sed -i "s/BAM_VERSION.*/BAM_VERSION \"$repo_version\"/" bam.h
         git add bam.h
     fi
 
     if [ -e doc/bcftools.1 ]; then
-        echo make DOC_VERSION=\"$version\" DOC_DATE=`date +"%Y-%m-%d"` docs
-        make DOC_VERSION=\"$version\" DOC_DATE=`date +"%Y-%m-%d"` docs
+        echo make DOC_VERSION=\"$repo_version\" DOC_DATE=`date +"%Y-%m-%d"` docs
+        make DOC_VERSION=\"$repo_version\" DOC_DATE=`date +"%Y-%m-%d"` docs
         git add doc/bcftools.1 doc/bcftools.html
     fi
-    git commit --no-verify -m "Release $version"
+    git commit --no-verify -m "Release $repo_version"
+
     cd ..
 
     "${script_dir}/news2notes.pl" -format tag "$repo/NEWS" > "${repo}_notes_tag.txt"

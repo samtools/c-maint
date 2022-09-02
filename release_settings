@@ -1,0 +1,18 @@
+# N.B. This file is included by both the shell scripts and the Makefile.
+# Don't put anything more ambitious than 'name=value' declarations here.
+
+# version to be released
+version=1.16
+# version number overrides for individual packages
+samtools_version=1.16.1
+
+# github repository to pull from
+repname=samtools
+
+# source branch for the release
+# branch=develop
+branch=fixes-1.16
+
+# packages to include in this release
+# packages="htslib samtools bcftools"
+packages="samtools"

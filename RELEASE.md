@@ -2,7 +2,7 @@ Making a release of htslib, samtools, and bcftools, or just one or two of them, 
 
 # Release process summary
 
-* Update the version number in `mkrelease`
+* Update the version number in `release_settings`
 
 * Run `mkrelease`.  This will clone repositories into `$HOME/tmp/release/<version>`, merge changes to `master` with necessary changes and commit everything.  It will also reformat the NEWS file into versions suitable for GitHub, SourceForge and the release tag.
 
@@ -19,7 +19,7 @@ Making a release of htslib, samtools, and bcftools, or just one or two of them, 
 * **Check that `tag_release` has worked correctly.**
   - Use `gitk --all` on each repository
 
-* Run `make tar TAG=<version> PREFIX_DIR=$HOME/tmp/release/<version>`
+* Run `make tar PREFIX_DIR=$HOME/tmp/release/<version>`
   - Will make tar files in this directory
 
 * **Check the tar files are correct.**
@@ -36,6 +36,11 @@ Making a release of htslib, samtools, and bcftools, or just one or two of them, 
 
 * Prepeare tweet and release announcement email
 
+* Prepare www.htslib.org
+  - Update download buttons to point to the new release
+  - Run `make` to update the man pages
+  - Push to your own fork of www.htslib.org gh-pages and check it looks OK.
+
 * Do release
   - **Check that everything is ready and correct.**
   - For each reposiotry in `$HOME/tmp/release/<version>` run `git push origin master develop <version>`
@@ -44,13 +49,9 @@ Making a release of htslib, samtools, and bcftools, or just one or two of them, 
   - Select new samtools tarball for the download button.
   - **Check the published release pages are as expected (correct text and files attached).**
 
-* Send tweet and email
+* Push updated download buttons to samtools' www.htslib.org gh-pages
 
-* Update www.htslib.org
-  - Update download buttons to point to the new release
-  - Run `make` to update the man pages
-  - Push to your own fork of www.htslib.org gh-pages and check it looks OK.
-  - When ready, push to samtools' www.htslib.org gh-pages
+* Send tweet and email
 
 * Push any changes made to this repository.
 
