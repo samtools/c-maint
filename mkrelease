@@ -67,6 +67,17 @@ for repo in $packages; do
 	sed -i "/define *HTS_VERSION/s/VERSION .*/VERSION $vernum/" htslib/hts.h
 	git add htslib/hts.h
     fi
+
+    if [ "$repo" = htslib ] ; then
+	# Update htslib.map if necessary, which means we have to build
+	# the library.  We override PACKAGE_VERSION because version.sh
+	# will still think it's the old one because we haven't tagged yet.
+	make libhts.so PACKAGE_VERSION="$repo_version"
+	make htslib.map PACKAGE_VERSION="$repo_version"
+	git add htslib.map
+	git clean -f -x .
+    fi
+
     case $repo in
 	htslib) manpages="bgzip.1 htsfile.1 htslib-s3-plugin.7 tabix.1" ;;
 	samtools) manpages=doc/samtools*.1" misc/wgsim.1" ;;
