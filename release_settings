@@ -2,17 +2,16 @@
 # Don't put anything more ambitious than 'name=value' declarations here.
 
 # version to be released
-version=1.16
+version=1.17
 # version number overrides for individual packages
-samtools_version=1.16.1
+# samtools_version=
 
 # github repository to pull from
 repname=samtools
 
 # source branch for the release
-# branch=develop
-branch=fixes-1.16
+branch=develop
+# branch=fixes-
 
 # packages to include in this release
-# packages="htslib samtools bcftools"
-packages="samtools"
+packages="htslib samtools bcftools"
