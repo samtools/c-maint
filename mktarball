@@ -64,9 +64,10 @@ then
   (cd $projver
   touch config.mk
   unset MAKEFLAGS MAKELEVEL MAKEOVERRIDES MFLAGS
-  grep -q AX_ configure.ac && (grep -q m4_include configure.ac || aclocal)
-  test -e config.h.in || autoheader
-  autoconf --warnings=all
+#  grep -q AX_ configure.ac && (grep -q m4_include configure.ac || aclocal)
+#  test -e config.h.in || autoheader
+#  autoconf --warnings=all
+  autoreconf -i --warnings=all
   rm -rf autom4te.cache config.mk)
   # Look for unexpanded autoconf macros
   egrep '^[^#]*\<A[A-Z]_[A-Z_]*' $projver/configure && exit 1

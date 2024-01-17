@@ -20,27 +20,31 @@ for repo in $packages; do
     git checkout develop
     git fetch
     git merge --no-ff --no-commit master || git mergetool
-    mv NEWS NEWS~
+    NEWS=NEWS
+    if [ -e NEWS.md ] ; then
+        NEWS=NEWS.md
+    fi
+    mv "$NEWS" "$NEWS"~
     case $repo in
         (htslib)
-	    echo 'Noteworthy changes in release a.b' > NEWS
-	    echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> NEWS
+	    echo 'Noteworthy changes in release a.b' > "$NEWS"
+	    echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> "$NEWS"
 	    sed -i "/define *HTS_VERSION/s/[0-9][0-9]$/90/" htslib/hts.h
 	    git add htslib/hts.h
 	    ;;
 	(samtools)
-	    echo 'Release a.b' > NEWS
-	    echo '-----------' >> NEWS
+	    echo 'Release a.b' > "$NEWS"
+	    echo '-----------' >> "$NEWS"
 	    sed -i '/define BAM_VERSION/ s/"$/+"/' bam.h
 	    git add bam.h
 	    ;;
 	(bcftools)
-	    echo "## Release a.b" > NEWS
+	    echo "## Release a.b" > "$NEWS"
 	    ;;
     esac
-    echo >> NEWS
-    cat NEWS~ >> NEWS
-    rm NEWS~
-    git add NEWS
-    git commit -m 'Merge version number bump and NEWS file from master'
+    echo >> "$NEWS"
+    cat "$NEWS"~ >> "$NEWS"
+    rm "$NEWS"~
+    git add "$NEWS"
+    git commit -m "Merge version number bump and $NEWS file from master"
 done

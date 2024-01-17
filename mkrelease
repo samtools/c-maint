@@ -79,7 +79,7 @@ for repo in $packages; do
     fi
 
     case $repo in
-	htslib) manpages="bgzip.1 htsfile.1 htslib-s3-plugin.7 tabix.1" ;;
+	htslib) manpages="annot-tsv.1 bgzip.1 htsfile.1 htslib-s3-plugin.7 tabix.1" ;;
 	samtools) manpages=doc/samtools*.1" misc/wgsim.1" ;;
 	*) manpages=none
     esac
@@ -99,14 +99,18 @@ for repo in $packages; do
         sed -i "s/htslib-[0-9].*/htslib-${htslib_version:-$version}/" README
         git add README
     fi
-    if [ -e NEWS ]; then
+    NEWS=NEWS
+    if [ -e NEWS.md ]; then
+	NEWS=NEWS.md
+    fi
+    if [ -e "$NEWS" ]; then
 	qvers=`echo "$repo_version" | sed 's/\./\\./'`
-	if grep -q -E -i "release $qvers( |$)" NEWS ; then
-	    perl -i -nle 'if ($. < 10 && /release a\.b/i) { $skip = 1; } elsif ($skip && /release \d/i) { $skip = 0; } if (!$skip && /release '"$qvers"'$/i) { $_ .= " ('"$ndate"')" } print unless ($skip);' NEWS
+	if grep -q -E -i "release $qvers( |$)" "$NEWS" ; then
+	    perl -i -nle 'if ($. < 10 && /release a\.b/i) { $skip = 1; } elsif ($skip && /release \d/i) { $skip = 0; } if (!$skip && /release '"$qvers"'$/i) { $_ .= " ('"$ndate"')" } print unless ($skip);' "$NEWS"
 	else
-	    perl -i -ple 'if ($. < 10) { if (s/elease a\.b/elease '"$repo_version ($ndate)"'/) { $l = length; print; $_ = <>; if (/^([-~=])/) { $_ = $1 x $l; } } }' NEWS
+	    perl -i -ple 'if ($. < 10) { if (s/elease a\.b/elease '"$repo_version ($ndate)"'/) { $l = length; print; $_ = <>; if (/^([-~=])/) { $_ = $1 x $l; } } }' "$NEWS"
 	fi
-	git add NEWS
+	git add "$NEWS"
     fi
     if [ -e bam.h ]; then
         sed -i "s/BAM_VERSION.*/BAM_VERSION \"$repo_version\"/" bam.h
@@ -122,7 +126,7 @@ for repo in $packages; do
 
     cd ..
 
-    "${script_dir}/news2notes.pl" -format tag "$repo/NEWS" > "${repo}_notes_tag.txt"
-    "${script_dir}/news2notes.pl" -format sf "$repo/NEWS" > "${repo}_notes_sf.txt"
-    "${script_dir}/news2notes.pl" -format github "$repo/NEWS" > "${repo}_notes_github.txt"
+    "${script_dir}/news2notes.pl" -format tag "$repo/$NEWS" > "${repo}_notes_tag.txt"
+    "${script_dir}/news2notes.pl" -format sf "$repo/$NEWS" > "${repo}_notes_sf.txt"
+    "${script_dir}/news2notes.pl" -format github "$repo/$NEWS" > "${repo}_notes_github.txt"
 done

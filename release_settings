@@ -2,7 +2,7 @@
 # Don't put anything more ambitious than 'name=value' declarations here.
 
 # version to be released
-version=1.18
+version=1.19
 # version number overrides for individual packages
 # samtools_version=
 
