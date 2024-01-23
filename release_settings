@@ -2,7 +2,7 @@
 # Don't put anything more ambitious than 'name=value' declarations here.
 
 # version to be released
-version=1.19
+version=1.19.1
 # version number overrides for individual packages
 # samtools_version=
 
@@ -15,3 +15,4 @@ branch=develop
 
 # packages to include in this release
 packages="htslib samtools bcftools"
+packages="htslib samtools"
