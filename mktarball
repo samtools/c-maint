@@ -68,9 +68,12 @@ then
 #  test -e config.h.in || autoheader
 #  autoconf --warnings=all
   autoreconf -i --warnings=all
+  for f in config.sub config.guess ; do
+      if [ -e "$f" ] ; then chmod 775 "$f" ; fi
+  done
   rm -rf autom4te.cache config.mk)
   # Look for unexpanded autoconf macros
-  egrep '^[^#]*\<A[A-Z]_[A-Z_]*' $projver/configure && exit 1
+  awk '/^ *ac_fn_check_decl [^#]*\<(AI_V4MAPPED|AI_ADDRCONFIG)/ { next } /^[^#]*\<A[A-Z]_[A-Z_]*/ { print; exit 1 }' $projver/configure || exit 1
 fi
 rm -f $projver$tarsuffix.tar.bz2
 tar --mode=ug=rwX --mode=o=rX --owner=0 --group=0 -cjf $projver$tarsuffix.tar.bz2 $projver

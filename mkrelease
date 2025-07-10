@@ -79,7 +79,7 @@ for repo in $packages; do
     fi
 
     case $repo in
-	htslib) manpages="annot-tsv.1 bgzip.1 htsfile.1 htslib-s3-plugin.7 tabix.1" ;;
+	htslib) manpages="annot-tsv.1 bgzip.1 htsfile.1 htslib-s3-plugin.7 tabix.1 ref_cache/ref-cache.1" ;;
 	samtools) manpages=doc/samtools*.1" misc/wgsim.1" ;;
 	*) manpages=none
     esac
