@@ -2,7 +2,7 @@
 # Don't put anything more ambitious than 'name=value' declarations here.
 
 # version to be released
-version=1.22
+version=1.22.1
 # version number overrides for individual packages
 # samtools_version=
 # htslib_version=
@@ -11,9 +11,9 @@ version=1.22
 repname=samtools
 
 # source branch for the release
-branch=develop
-# branch=fixes-
+# branch=develop
+branch=fixes-1.22
 
 # packages to include in this release
-packages="htslib samtools bcftools"
+packages="htslib samtools"
 
