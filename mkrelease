@@ -1,5 +1,18 @@
 #!/bin/sh -x
 
+do_clone () {
+    local owner=$1
+    local reponame=$2
+    case "$owner" in
+	/*)
+	    git clone --recurse-submodules "$owner"/"$reponame"
+	    ;;
+	*)
+	    git clone --recurse-submodules http://github.com/"$owner"/"$reponame".git
+	    ;;
+    esac
+}
+
 set -e
 
 script_dir=$(dirname "$(readlink -f "$0")")
@@ -21,7 +34,7 @@ cd $TMPDIR
 # Ensure we have htslib, even if it's not to be released.
 if echo "$packages" | grep -v -q htslib ; then
     rm -fr htslib
-    git clone --recurse-submodules http://github.com/$repname/htslib.git
+    do_clone "$repname" htslib
     cd htslib
     git checkout --recurse-submodules --track origin/master
     cd ..
@@ -34,10 +47,9 @@ for repo in $packages; do
     eval 'repo_branch=${'"${repo}_branch"':-$branch}'
     eval 'repo_version=${'"${repo}_version"':-$version}'
 
-    rm -fr $repo
-    git clone --recurse-submodules http://github.com/$repname/$repo.git
-
-    cd $repo
+    rm -fr "$repo"
+    do_clone "$repname" "$repo"
+    cd "$repo"
 
     git checkout --recurse-submodules --track origin/master
     git fetch --recurse-submodules origin "$repo_branch":"$repo_branch"
