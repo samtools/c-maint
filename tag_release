@@ -15,6 +15,12 @@ for repo in $packages; do
     eval 'repo_version=${'"${repo}_version"':-$version}'
 
     cd "$TMPDIR/$repo"
+
+    if [ "x$nomerge" != x ] ; then
+	git tag -F ../${repo}_notes_tag.txt --cleanup=verbatim -s ${repo_version}
+	continue
+    fi
+
     git checkout master
     git tag -F ../${repo}_notes_tag.txt --cleanup=verbatim -s ${repo_version}
     git checkout develop

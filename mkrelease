@@ -51,9 +51,15 @@ for repo in $packages; do
     do_clone "$repname" "$repo"
     cd "$repo"
 
-    git checkout --recurse-submodules --track origin/master
-    git fetch --recurse-submodules origin "$repo_branch":"$repo_branch"
-    git merge --no-ff --no-commit "$repo_branch"
+    if [ "x$nomerge" = x ] ; then
+	# git checkout --recurse-submodules --track origin/master
+	git checkout master
+	git fetch --recurse-submodules origin "$repo_branch":"$repo_branch"
+	git merge --no-ff --no-commit "$repo_branch"
+    else
+	git fetch --recurse-submodules origin "$repo_branch":"$repo_branch"
+	git checkout --recurse-submodules "$repo_branch"
+    fi
 
     if [ -e .gitmodules ] ; then
 	git submodule update
