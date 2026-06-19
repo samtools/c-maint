@@ -136,6 +136,7 @@ for repo in $packages; do
     fi
 
     if [ -e doc/bcftools.1 ]; then
+	touch doc/bcftools.txt
         echo make DOC_VERSION=\"$repo_version\" DOC_DATE=`date +"%Y-%m-%d"` docs
         make DOC_VERSION=\"$repo_version\" DOC_DATE=`date +"%Y-%m-%d"` docs
         git add doc/bcftools.1 doc/bcftools.html
