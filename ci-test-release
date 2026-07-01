@@ -1,0 +1,29 @@
+#!/bin/bash -x
+
+# Asks the question: if we were to make a release today, would the tarballs
+# work?
+
+script_dir=$(dirname "$(readlink -f "$0")")
+if [ ! -e release_settings.orig ]; then
+    cp release_settings release_settings.orig
+fi
+sed 's/^version=.*/version=9.9/' release_settings.orig > release_settings
+. "$script_dir/release_settings"
+
+TMPDIR=~/tmp/release/$version
+mkdir -p $TMPDIR
+
+# For local use; asciidoctor
+PATH=~/scratch/opt/bin:$PATH
+
+./mkrelease
+
+# Tag the releases
+# We don't care about signing releases, just knowledge of the
+# integrated releasing and build process works.
+for i in $TMPDIR/{htslib,samtools,bcftools}
+do
+  (cd $i;git tag -a $version -m $version)
+done
+
+make tar PREFIX_DIR=$TMPDIR
