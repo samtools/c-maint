@@ -1,0 +1,12 @@
+FROM opensuse/tumbleweed AS buildimg
+
+RUN zypper --non-interactive install --allow-downgrade --force-resolution git autoconf automake make gcc perl zlib-devel libbz2-devel xz-devel libdeflate-devel libcurl-devel libopenssl-devel diffutils llvm-clang ncurses-devel bzip2
+
+FROM buildimg AS test
+
+RUN git clone --branch=master --recurse-submodules https://github.com/samtools/htslib.git && \
+    git	clone --branch=master https://github.com/samtools/samtools.git && \
+    git clone --branch=master https://github.com/samtools/bcftools.git && \
+    ( cd htslib && autoreconf -i && ./configure && make -j 4 && make check ) && \
+    ( cd samtools && autoreconf -i && ./configure && make -j 4 && make check ) && \
+    ( cd bcftools && autoreconf -i && ./configure && make -j 4 && make check )

@@ -1,0 +1,12 @@
+FROM quay.io/centos/centos:10 AS buildimg
+
+RUN yum install -y autoconf automake make gcc perl-Data-Dumper zlib-devel bzip2 bzip2-devel xz-devel curl-devel openssl-devel git perl-FindBin ncurses-devel
+
+FROM buildimg AS test
+
+RUN git clone --branch=master --recurse-submodules https://github.com/samtools/htslib.git && \
+    git	clone --branch=master https://github.com/samtools/samtools.git && \
+    git clone --branch=master https://github.com/samtools/bcftools.git && \
+    ( cd htslib && autoreconf -i && ./configure && make -j 4 && make check ) && \
+    ( cd samtools && autoreconf -i && ./configure && make -j 4 && make check ) && \
+    ( cd bcftools && autoreconf -i && ./configure && make -j 4 && make check )
