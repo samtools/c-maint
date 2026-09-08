@@ -1,9 +1,12 @@
 # Build and cache the release tarballs
 name: Test tarballs
 on:
+  push:
+    paths:
+      - .github/workflows/**
   schedule:
-    # Every Sunday at 3:15am GMT
-    - cron: "15 3 * * 0"
+    # Every Monday at 3:15am GMT
+    - cron: "15 3 * * 1"
 
 #on: [push, pull_request] # uncomment for easier debugging
 
