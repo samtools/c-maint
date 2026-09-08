@@ -1,0 +1,48 @@
+name: MacOS based workflows
+
+on:
+  workflow_call:
+
+jobs:
+  Macos:
+    # comment out if we're using the cache
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ['htslib', 'samtools', 'bcftools']
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c #v8
+        with:
+          name: tarball-${{ matrix.package }}
+          path: .
+
+      ## Uncomment this when doing multiple CI tests for a faster turnaround
+      #- name: Fetch cached tarball
+      #  id: tarball-restore
+      #  uses: actions/cache/restore@v6
+      #  with:
+      #    path: |
+      #      htslib-9.9.tar.bz2
+      #      samtools-9.9.tar.bz2
+      #      bcftools-9.9.tar.bz2
+      #    key: tarballs
+
+      - name: Install dependencies
+        run: |
+          brew install autoconf automake libtool libdeflate
+
+      - name: Extract and build
+        shell: bash
+        run: |
+          tar xf ${{ matrix.package }}-9.9.tar.bz2
+          cd ${{ matrix.package }}-9.9
+          ./configure --enable-werror
+          make -j5
+
+      - name: Test
+        run: |
+          cd ${{ matrix.package }}-9.9
+          make check

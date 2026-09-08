@@ -1,0 +1,58 @@
+# Build and cache the release tarballs
+name: Test tarballs
+on:
+  push:
+    paths:
+      - .github/workflows/**
+  schedule:
+    # Every Monday at 3:15am GMT
+    - cron: "15 3 * * 1"
+
+#on: [push, pull_request] # uncomment for easier debugging
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # -------------------------------------------------------------------------
+  # Release tar creation
+  create-tarball:
+    uses: ./.github/workflows/create-tarball.yml
+
+  # -------------------------------------------------------------------------
+  # Ubuntu linux native builds, on x86-64 and ARM
+  linux-workflows:
+    needs: create-tarball
+    uses: ./.github/workflows/linux.yml
+
+  # -------------------------------------------------------------------------
+  # Miscellanious Linux variants using docker containers.
+  # All x86-64, although we have the option of trying ARM ones too
+  container-workflows:
+    needs: create-tarball
+    uses: ./.github/workflows/containers.yml
+
+  # -------------------------------------------------------------------------
+  # MacOS native builds, on ARM
+  macos-workflows:
+    needs: create-tarball
+    uses: ./.github/workflows/macos.yml
+
+  # -------------------------------------------------------------------------
+  # Microsoft Windows builds using MSYS2/MINGW environment
+  windows-workflows:
+    needs: create-tarball
+    uses: ./.github/workflows/windows.yml
+
+  # -------------------------------------------------------------------------
+  # Miscellanious Unix variants emulated via VM instances
+  # These can be a mix of architectures due to the use of QEMU, but at
+  # present we're quite limited in choice.  These have to be separate jobs due
+  # to the inability to use matrix in uses: and shell: clauses.
+  vm-workflows:
+    needs: create-tarball
+    uses: ./.github/workflows/vm.yml
+    # secrets:
+    #   VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}

@@ -1,0 +1,57 @@
+name: VM based workflows
+
+on:
+  workflow_call:
+
+jobs:
+  create-tarball:
+    # For CI development, uncomment this conditional so we'll use a cache
+    # copy. Also remember to comment out the "needs: create-tarball" lines
+    #if: ${{ false }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+  
+      - name: Create release tarballs
+        run: |
+          # Building the tarballs also requires a full build of htslib, so
+          # we inherit all of its dependencies for this workflow too.
+          sudo apt-get update
+          sudo apt-get install -y --no-install-suggests --no-install-recommends git asciidoctor autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libdeflate-dev
+  
+          git config --global user.email "ci@ci.com"
+          git config --global user.name "CI Tester"
+          ./ci-test-release
+          ls -l *.tar.bz2
+
+      - name: Htslib tarball
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+        with:
+          name: tarball-htslib
+          path: ./htslib*.tar.bz2
+
+      - name: Samtools tarball
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+        with:
+          name: tarball-samtools
+          path: ./samtools*.tar.bz2
+
+      - name: Bcftools tarball
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+        with:
+          name: tarball-bcftools
+          path: ./bcftools*.tar.bz2
+
+#      # Enable this when doing CI development work, for faster turnaround
+#      - name: Cache tarballs
+#        id: cache-tarballs
+#        uses: actions/cache@v6
+#        with:
+#          path: |
+#            htslib-9.9.tar.bz2
+#            samtools-9.9.tar.bz2
+#            bcftools-9.9.tar.bz2
+#          key: tarball

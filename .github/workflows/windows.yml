@@ -1,0 +1,67 @@
+name: Windows based workflows
+
+on:
+  workflow_call:
+
+jobs:
+  Windows:
+    # comment out if we're using the cache
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ['htslib', 'samtools', 'bcftools']
+
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c #v8
+        with:
+          name: tarball-${{ matrix.package }}
+          path: .
+
+      ## Uncomment this when doing multiple CI tests for a faster turnaround
+      #- name: Fetch cached tarball
+      #  id: tarball-restore
+      #  uses: actions/cache/restore@v6
+      #  with:
+      #    path: |
+      #      htslib-9.9.tar.bz2
+      #      samtools-9.9.tar.bz2
+      #      bcftools-9.9.tar.bz2
+      #    key: tarballs
+
+      - name: Install dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          update: false
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-autotools
+            mingw-w64-x86_64-curl
+            mingw-w64-x86_64-libdeflate
+            mingw-w64-x86_64-tools-git
+            mingw-w64-x86_64-zlib
+            mingw-w64-x86_64-bzip2
+            mingw-w64-x86_64-xz
+            mingw-w64-x86_64-ncurses
+
+      - name: Extract and build
+        shell: msys2 {0}
+        run: |
+          export PATH="$PATH:/mingw64/bin:/c/Program Files/Git/bin"
+          export MSYSTEM=MINGW64
+
+          tar xf ${{ matrix.package }}-9.9.tar.bz2
+          cd ${{ matrix.package }}-9.9
+          ./configure --enable-werror
+          make -j5
+
+      - name: Test
+        shell: msys2 {0}
+        run: |
+          export PATH="$PATH:/mingw64/bin:/c/Program Files/Git/bin"
+          export MSYSTEM=MINGW64
+
+          cd ${{ matrix.package }}-9.9
+          make check
