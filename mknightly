@@ -1,0 +1,79 @@
+#!/bin/sh
+
+# github repository to pull from
+repname=samtools
+
+# directory to do the pull and build
+TMPDIR=`readlink -f $TMPDIR`
+
+# directory to install into
+PREFIX=`readlink -f $PREFIX`
+
+# clean up TMPDIR
+mkdir -p $TMPDIR
+rm -fr $TMPDIR/*
+cd $TMPDIR
+
+# build each repository in turn
+for repo in htslib htslib-plugins samtools bcftools; do
+    echo Building $repo
+    git clone git@github.com:$repname/$repo.git
+    cd $repo
+    version=`git log -1 --format="%h"`
+    date=`date +"%d %B %Y"`
+    rm -fr .git*
+    sed -i "s/PACKAGE_VERSION[ ][ ]*=.*/PACKAGE_VERSION = $version/" Makefile
+    if [ -e htsfile.1 ]; then
+        sed -i "s/^.TH.*/.TH htsfile 1 \"$date\" \"htslib-$version\" \"Bioinformatics tools\"/" htsfile.1
+    fi
+    if [ -e tabix.1 ]; then
+        sed -i "s/^.TH.*/.TH tabix 1 \"$date\" \"htslib-$version\" \"Bioinformatics tools\"/" tabix.1
+    fi
+    if [ -e samtools.1 ]; then
+        sed -i "s/^.TH.*/.TH samtools 1 \"$date\" \"samtools-$version\" \"Bioinformatics tools\"/" samtools.1
+    fi
+    if [ -e misc/wgsim.1 ]; then
+        sed -i "s/^.TH.*/.TH wgsim 1 \"$date\" \"samtools-$version\" \"Bioinformatics tools\"/" misc/wgsim.1
+    fi
+    if [ -e README ]; then
+        sed -i "s/samtools-.*/samtools-$version # Within the unpacked release directory/" README
+        sed -i "s/htslib-.*/htslib-$version/" README
+    fi
+    if [ -e bam.h ]; then
+        sed -i "s/BAM_VERSION.*/BAM_VERSION \"$version+\"/" bam.h
+    fi
+
+    if [ -e doc/bcftools.1 ]; then
+        echo make DOC_VERSION=\"$version\" DOC_DATE=`date +"%Y-%m-%d"` docs
+        make -n DOC_VERSION=\"$version\" DOC_DATE=`date +"%Y-%m-%d"` docs
+    fi
+    cd ..
+done
+
+# Build htslib plugins
+cd $TMPDIR/htslib-plugins
+IRODS_HOME=/software/solexa/pkg/irods/4.1.10/usr HTSDIR=$TMPDIR/htslib make
+make prefix=$PREFIX/htslib-plugins/nightly install
+
+# Build htslib
+cd $TMPDIR/htslib
+autoreconf -i
+./configure --prefix=$PREFIX/htslib/nightly --enable-libcurl --enable-plugins --with-plugin-dir=$PREFIX/htslib-plugins/nightly/libexec/htslib
+make
+make test
+make install
+
+# Build samtools
+cd $TMPDIR/samtools
+autoreconf -i
+./configure --prefix=$PREFIX/samtools/nightly --with-htslib=$TMPDIR/htslib
+make
+make test
+make install
+
+# Build bcftools
+cd $TMPDIR/bcftools
+make HTSDIR=$TMPDIR/htslib
+make test
+make prefix=$PREFIX/bcftools/nightly install
+
