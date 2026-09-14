@@ -1,6 +1,6 @@
 FROM quay.io/centos/centos:10 AS buildimg
 
-RUN yum install -y autoconf automake make gcc perl-Data-Dumper zlib-devel bzip2 bzip2-devel xz-devel curl-devel openssl-devel git perl-FindBin ncurses-devel
+RUN yum install -y autoconf automake make gcc perl-Data-Dumper zlib-devel bzip2 bzip2-devel xz-devel curl-devel openssl-devel git perl-FindBin ncurses-devel diffutils
 
 FROM buildimg AS test
 
